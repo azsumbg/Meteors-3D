@@ -88,6 +88,8 @@ ID2D1RadialGradientBrush* b1BckgBrush{ nullptr };
 ID2D1RadialGradientBrush* b2BckgBrush{ nullptr };
 ID2D1RadialGradientBrush* b3BckgBrush{ nullptr };
 
+ID2D1RadialGradientBrush* FieldBckgBrush{ nullptr };
+
 ID2D1SolidColorBrush* TxtBrush{ nullptr };
 ID2D1SolidColorBrush* HgltBrush{ nullptr };
 ID2D1SolidColorBrush* InactBrush{ nullptr };
@@ -137,6 +139,7 @@ void ClearResources()
 {
     if (!ClearMem(&iFactory))LogError(L"Error releasing iFactory !");
     if (!ClearMem(&Draw))LogError(L"Error releasing Draw !");
+    if (!ClearMem(&FieldBckgBrush))LogError(L"Error releasing FieldBckgBrush !");
     if (!ClearMem(&b1BckgBrush))LogError(L"Error releasing b1BckgBrush !");
     if (!ClearMem(&b2BckgBrush))LogError(L"Error releasing b2BckgBrush !");
     if (!ClearMem(&b3BckgBrush))LogError(L"Error releasing b3BckgBrush !");
@@ -466,7 +469,7 @@ void CreateResources()
                 ID2D1GradientStopCollection* gColl{ nullptr };
 
                 gStops[0].position = 0;
-                gStops[0].color = D2D1::ColorF(D2D1::ColorF::Gold);
+                gStops[0].color = D2D1::ColorF(D2D1::ColorF::Cyan);
                 gStops[1].position = 1.0f;
                 gStops[1].color = D2D1::ColorF(D2D1::ColorF::Indigo);
 
@@ -496,8 +499,32 @@ void CreateResources()
                     ClearMem(&gColl);
                 }
 
+                gStops[0].position = 0;
+                gStops[0].color = D2D1::ColorF(D2D1::ColorF::Goldenrod);
+                gStops[1].position = 1.0f;
+                gStops[1].color = D2D1::ColorF(D2D1::ColorF::Black);
+
+                hr = Draw->CreateGradientStopCollection(gStops, 2, &gColl);
+                if (hr != S_OK)
+                {
+                    LogError(L"Error creating D2D1 GradientStopCollection for field background !");
+                    ErrExit(eD2D);
+                }
+                if (gColl)
+                {
+                    hr = Draw->CreateRadialGradientBrush(D2D1::RadialGradientBrushProperties(D2D1::Point2F(scr_width / 2,
+                        scr_height / 2 - 25.0f), D2D1::Point2F(0, 0), 250.0f, 100.0f), gColl, &FieldBckgBrush);
+                    if (hr != S_OK)
+                    {
+                        LogError(L"Error creating D2D1 RadialGradientBrushes for Field background !");
+                        ErrExit(eD2D);
+                    }
+
+                    ClearMem(&gColl);
+                }
+
                 hr = Draw->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::DarkSlateGray), &StatusBckgBrush);
-                hr = Draw->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Green), &TxtBrush);
+                hr = Draw->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Chartreuse), &TxtBrush);
                 hr = Draw->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::OrangeRed), &HgltBrush);
                 hr = Draw->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Sienna), &InactBrush);
 
@@ -676,9 +703,6 @@ void CreateResources()
 }
 
 
-
-
-
 int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance, _In_ LPWSTR lpCmdLine, _In_ int nCmdShow)
 {
     bIns = hInstance;
@@ -749,6 +773,8 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             if (!b3Hglt)Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmFormat, b3TxtRect, TxtBrush);
             else Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmFormat, b3TxtRect, HgltBrush);
         }
+
+        if (FieldBckgBrush)Draw->FillRectangle(D2D1::RectF(0, sky, scr_width, scr_height), FieldBckgBrush);
 
         //////////////////////////////////////////////////////
 
