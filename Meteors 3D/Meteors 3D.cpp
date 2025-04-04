@@ -79,6 +79,8 @@ int level = 1;
 int mins = 0;
 int secs = 0;
 
+dll::RANDIT RandGen{};
+
 ID2D1Factory* iFactory{ nullptr };
 ID2D1HwndRenderTarget* Draw{ nullptr };
 
@@ -282,7 +284,9 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPar
         break;
 
     case WM_SETCURSOR:
-        if (LOWORD(wParam) == HTCLIENT)
+        GetCursorPos(&cur_pos);
+        ScreenToClient(bHwnd, &cur_pos);
+        if (LOWORD(lParam) == HTCLIENT)
         {
             if (!in_client)
             {
@@ -290,9 +294,9 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPar
                 pause = false;
             }
 
-            if (HIWORD(lParam) <= 50)
+            if (cur_pos.y <= 50)
             {
-                if (LOWORD(lParam) >= b1TxtRect.left && LOWORD(lParam) <= b1TxtRect.right)
+                if (cur_pos.x >= b1TxtRect.left && cur_pos.x <= b1TxtRect.right)
                 {
                     if (!b1Hglt)
                     {
@@ -302,7 +306,7 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPar
                         b3Hglt = false;
                     }
                 }
-                if (LOWORD(lParam) >= b2TxtRect.left && LOWORD(lParam) <= b2TxtRect.right)
+                if (cur_pos.x >= b2TxtRect.left && cur_pos.x <= b2TxtRect.right)
                 {
                     if (!b2Hglt)
                     {
@@ -312,7 +316,7 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPar
                         b3Hglt = false;
                     }
                 }
-                if (LOWORD(lParam) >= b3TxtRect.left && LOWORD(lParam) <= b3TxtRect.right)
+                if (cur_pos.x >= b3TxtRect.left && cur_pos.x <= b3TxtRect.right)
                 {
                     if (!b3Hglt)
                     {
@@ -479,10 +483,10 @@ void CreateResources()
                         gColl, &b1BckgBrush);
                     hr = Draw->CreateRadialGradientBrush(D2D1::RadialGradientBrushProperties(D2D1::Point2F(b2Rect.left
                         + (b2Rect.right - b2Rect.left) / 2, 25.0f), D2D1::Point2F(0, 0), (b2Rect.right - b2Rect.left) / 2, 25.0f),
-                        gColl, &b1BckgBrush);
+                        gColl, &b2BckgBrush);
                     hr = Draw->CreateRadialGradientBrush(D2D1::RadialGradientBrushProperties(D2D1::Point2F(b3Rect.left
                         + (b3Rect.right - b3Rect.left) / 2, 25.0f), D2D1::Point2F(0, 0), (b3Rect.right - b3Rect.left) / 2, 25.0f),
-                        gColl, &b1BckgBrush);
+                        gColl, &b3BckgBrush);
                     if (hr != S_OK)
                     {
                         LogError(L"Error creating D2D1 RadialGradientBrushes for buttons background !");
@@ -620,27 +624,55 @@ void CreateResources()
             }
         }
 
-
-
-
-
-
+        hr = DWriteCreateFactory(DWRITE_FACTORY_TYPE_SHARED, __uuidof(IDWriteFactory), reinterpret_cast<IUnknown**>(&iWriteFactory));
+        if (hr != S_OK)
+        {
+            LogError(L"Error creating base D2D1 iWriteFactory !");
+            ErrExit(eD2D);
+        }
+        if (iWriteFactory)
+        {
+            hr = iWriteFactory->CreateTextFormat(L"SEGOE SCRIPT", NULL, DWRITE_FONT_WEIGHT_EXTRA_BLACK, DWRITE_FONT_STYLE_NORMAL,
+                DWRITE_FONT_STRETCH_NORMAL, 16, L"", &nrmFormat);
+            hr = iWriteFactory->CreateTextFormat(L"SEGOE SCRIPT", NULL, DWRITE_FONT_WEIGHT_EXTRA_BLACK, DWRITE_FONT_STYLE_NORMAL,
+                DWRITE_FONT_STRETCH_NORMAL, 24, L"", &midFormat);
+            hr = iWriteFactory->CreateTextFormat(L"SEGOE SCRIPT", NULL, DWRITE_FONT_WEIGHT_EXTRA_BLACK, DWRITE_FONT_STYLE_NORMAL,
+                DWRITE_FONT_STRETCH_NORMAL, 62, L"", &bigFormat);
+            if (hr != S_OK)
+            {
+                LogError(L"Error creating base D2D1 iWriteFactory Text Formats !");
+                ErrExit(eD2D);
+            }
+        }
     }
 
+    if (Draw && TxtBrush && bigFormat)
+    {
+        wchar_t start_txt[38]{ L"МЕТЕОРИТНА АТАКА !    \n\ndev. Daniel !" };
+        wchar_t show_txt[38]{ L"" };
+        int intro_frame = 0;
+        int txt_pos = 0;
 
+        bool start_ready = false;
 
+        mciSendString(L"play .\\res\\snd\\morse.wav", NULL, NULL, NULL);
 
+        while (!start_ready)
+        {
+            Draw->BeginDraw();
+            Draw->DrawBitmap(bmpIntro[intro_frame], D2D1::RectF(0, 0, scr_width, scr_height));
+            show_txt[txt_pos] = start_txt[txt_pos];
+            intro_frame++;
+            if (intro_frame > 46)start_ready = true;
+            Draw->DrawTextW(show_txt, txt_pos, bigFormat, D2D1::RectF(100.0f, 100.0f, scr_width, scr_height), TxtBrush);
+            if (txt_pos < 38)++txt_pos;
+            Draw->EndDraw();
+            Sleep(80);
+        }
 
+        PlaySound(L".\\res\\snd\\boom.wav", NULL, SND_SYNC);
 
-
-
-
-
-
-
-
-
-
+    }
 }
 
 
@@ -656,6 +688,32 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
         ErrExit(eClass);
     }
 
+    
+    
+    CreateResources();
+
+    while (bMsg.message != WM_QUIT)
+    {
+        if ((bRet = PeekMessage(&bMsg, bHwnd, NULL, NULL, PM_REMOVE)) != 0)
+        {
+            if (bRet == -1)ErrExit(eMsg);
+            TranslateMessage(&bMsg);
+            DispatchMessageW(&bMsg);
+        }
+
+        if (pause)
+        {
+            if (show_help)continue;
+            if (Draw && bigFormat && TxtBrush)
+            {
+                Draw->BeginDraw();
+                Draw->DrawBitmap(bmpIntro[RandGen(0, 47)], D2D1::RectF(0, 0, scr_width, scr_height));
+                Draw->DrawTextW(L"ПАУЗА", 6, bigFormat, D2D1::RectF(scr_width / 2 - 100.0f, scr_height / 2 - 50.0f, scr_width, scr_height),
+                    TxtBrush);
+                Draw->EndDraw();
+                continue;
+            }
+        }
 
 
 
@@ -663,6 +721,42 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
 
 
+
+
+
+
+
+
+        // DRAW THINGS ***************************************
+
+        Draw->BeginDraw();
+
+        if (StatusBckgBrush && b1BckgBrush && b2BckgBrush && b3BckgBrush && TxtBrush && HgltBrush && InactBrush && nrmFormat)
+        {
+            Draw->FillRectangle(D2D1::RectF(0, 0, scr_width, 50.0f), StatusBckgBrush);
+            Draw->FillRectangle(b1Rect, b1BckgBrush);
+            Draw->FillRectangle(b2Rect, b2BckgBrush);
+            Draw->FillRectangle(b3Rect, b3BckgBrush);
+
+            if (name_set)Draw->DrawTextW(L"ИМЕ НА КАПИТАН", 15, nrmFormat, b1TxtRect, InactBrush);
+            else
+            {
+                if (!b1Hglt)Draw->DrawTextW(L"ИМЕ НА КАПИТАН", 15, nrmFormat, b1TxtRect, TxtBrush);
+                else Draw->DrawTextW(L"ИМЕ НА КАПИТАН", 15, nrmFormat, b1TxtRect, HgltBrush);
+            }
+            if (!b2Hglt)Draw->DrawTextW(L"ЗВУЦИ ON / OFF", 15, nrmFormat, b2TxtRect, TxtBrush);
+            else Draw->DrawTextW(L"ЗВУЦИ ON / OFF", 15, nrmFormat, b2TxtRect, HgltBrush);
+            if (!b3Hglt)Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmFormat, b3TxtRect, TxtBrush);
+            else Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmFormat, b3TxtRect, HgltBrush);
+        }
+
+        //////////////////////////////////////////////////////
+
+
+
+
+        Draw->EndDraw();
+    }
 
     std::remove(temp_file);
     ClearResources();
