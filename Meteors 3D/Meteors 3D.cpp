@@ -95,6 +95,10 @@ ID2D1SolidColorBrush* HgltBrush{ nullptr };
 ID2D1SolidColorBrush* InactBrush{ nullptr };
 ID2D1SolidColorBrush* StatusBckgBrush{ nullptr };
 
+ID2D1SolidColorBrush* SmallStarBrush{ nullptr };
+ID2D1SolidColorBrush* MidStarBrush{ nullptr };
+ID2D1SolidColorBrush* BigStarBrush{ nullptr };
+
 IDWriteFactory* iWriteFactory{ nullptr };
 IDWriteTextFormat* nrmFormat{ nullptr };
 IDWriteTextFormat* midFormat{ nullptr };
@@ -114,6 +118,14 @@ ID2D1Bitmap* bmpAsteroid2[50]{ nullptr };
 ID2D1Bitmap* bmpAsteroid3[20]{ nullptr };
 
 /////////////////////////////////////////////////////////////////
+
+std::vector<dll::Object> vStars;
+
+
+
+
+
+////////////////////////////////////////////////////////////////
 
 template<typename T>concept HasRelease = requires(T check)
 {
@@ -140,6 +152,9 @@ void ClearResources()
     if (!ClearMem(&iFactory))LogError(L"Error releasing iFactory !");
     if (!ClearMem(&Draw))LogError(L"Error releasing Draw !");
     if (!ClearMem(&FieldBckgBrush))LogError(L"Error releasing FieldBckgBrush !");
+    if (!ClearMem(&SmallStarBrush))LogError(L"Error releasing SmallStarBrush !");
+    if (!ClearMem(&MidStarBrush))LogError(L"Error releasing MidStarBrush !");
+    if (!ClearMem(&BigStarBrush))LogError(L"Error releasing BigStarBrush !");
     if (!ClearMem(&b1BckgBrush))LogError(L"Error releasing b1BckgBrush !");
     if (!ClearMem(&b2BckgBrush))LogError(L"Error releasing b2BckgBrush !");
     if (!ClearMem(&b3BckgBrush))LogError(L"Error releasing b3BckgBrush !");
@@ -190,6 +205,98 @@ void InitGame()
     secs = 180;
     wcscpy_s(current_player, L"ONE CAPITAN");
     name_set = false;
+    ////////////////////////////////////
+
+    if (!vStars.empty())for (int i = 0; i < vStars.size(); ++i)ClearMem(&vStars[i]);
+    vStars.clear();
+    for (int i = 0; i < 50; ++i)
+    {
+        bool ok = false;
+        while (!ok)
+        {
+            switch (RandGen(0, 2))
+            {
+            case 0:
+                {
+                    dll::Object aStar = dll::Factory(type_small_star, (float)(RandGen(20, (int)(scr_width))),
+                        (float)(RandGen((int)(sky), (int)(ground))));
+                    if (vStars.empty())
+                {
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+                    else
+                    {
+                        for (int i = 0; i < vStars.size(); ++i)
+                    {
+                        if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                            && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)break;
+                    }
+                        vStars.push_back(aStar);
+                        ok = true;
+                        break;
+                    }
+                }
+                break;
+
+            case 1:
+            {
+                dll::Object aStar = dll::Factory(type_mid_star, (float)(RandGen(20, (int)(scr_width))),
+                    (float)(RandGen((int)(sky), (int)(ground))));
+                if (vStars.empty())
+                {
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+                else
+                {
+                    for (int i = 0; i < vStars.size(); ++i)
+                    {
+                        if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                            && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)break;
+                    }
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+            }
+            break;
+
+            case 2:
+            {
+                dll::Object aStar = dll::Factory(type_big_star, (float)(RandGen(20, (int)(scr_width))),
+                    (float)(RandGen((int)(sky), (int)(ground))));
+                if (vStars.empty())
+                {
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+                else
+                {
+                    for (int i = 0; i < vStars.size(); ++i)
+                    {
+                        if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                            && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)break;
+                    }
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+            }
+            break;
+
+            }
+            
+        }
+    }
+
+
+
+
+
 
 
 
@@ -534,6 +641,17 @@ void CreateResources()
                     ErrExit(eD2D);
                 }
 
+                hr = Draw->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::Gold), &SmallStarBrush);
+                hr = Draw->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::AntiqueWhite), &MidStarBrush);
+                hr = Draw->CreateSolidColorBrush(D2D1::ColorF(D2D1::ColorF::PowderBlue), &BigStarBrush);
+
+                if (hr != S_OK)
+                {
+                    LogError(L"Error creating D2D1 Brushes for Stars !");
+                    ErrExit(eD2D);
+                }
+
+
                 bmpCannonL = Load(L".\\res\\img\\cannonL.png", Draw);
                 if (!bmpCannonL)
                 {
@@ -778,7 +896,29 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
         //////////////////////////////////////////////////////
 
+        if (!vStars.empty())
+        {
+            for (int i = 0; i < vStars.size(); ++i)
+            {
+                switch (vStars[i]->type)
+                {
+                case type_small_star:
+                    Draw->FillEllipse(D2D1::Ellipse(D2D1::Point2F(vStars[i]->center.x, vStars[i]->center.y), vStars[i]->x_radius,
+                        vStars[i]->y_radius), SmallStarBrush);
+                    break;
 
+                case type_mid_star:
+                    Draw->FillEllipse(D2D1::Ellipse(D2D1::Point2F(vStars[i]->center.x, vStars[i]->center.y), vStars[i]->x_radius,
+                        vStars[i]->y_radius), MidStarBrush);
+                    break;
+
+                case type_big_star:
+                    Draw->FillEllipse(D2D1::Ellipse(D2D1::Point2F(vStars[i]->center.x, vStars[i]->center.y), vStars[i]->x_radius,
+                        vStars[i]->y_radius), BigStarBrush);
+                    break;
+                }
+            }
+        }
 
 
         Draw->EndDraw();
