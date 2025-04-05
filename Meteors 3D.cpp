@@ -899,81 +899,472 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                 bool is_ok = false;
                 while (!is_ok)
                 {
-                    switch (RandGen(0, 2))
+                    switch (field_dir)
                     {
-                    case 0:
-                    {
-                        dll::Object aStar = dll::Factory(type_small_star, (float)(RandGen(0, (int)(scr_width))), 
-                            (float)(RandGen((int)(sky), (int)(ground))));
-                        is_ok = true;
-
-                        if (!vStars.empty())
+                    case dirs::up_left:
+                        switch (RandGen(0, 2))
                         {
-                            for (int i = 0; i < vStars.size(); ++i)
+                        case 0:
                             {
-                                if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
-                                    && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                            dll::Object aStar = dll::Factory(type_small_star, (float)(RandGen(0,
+                                (int)(scr_width))), (float)(RandGen((int)(scr_height / 2), (int)(ground))));
+                                is_ok = true;
+
+                                if (!vStars.empty())
                                 {
-                                    is_ok = false;
-                                    break;
+                                    for (int i = 0; i < vStars.size(); ++i)
+                                    {
+                                        if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                            && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                        {
+                                            is_ok = false;
+                                            break;
+                                        }
+                                    }
+                                    
+                                    if (is_ok)vStars.push_back(aStar);
                                 }
+                                else vStars.push_back(aStar);
                             }
+                            break;
 
-                            if (is_ok)vStars.push_back(aStar);
-                        }
-                        else vStars.push_back(aStar);
-                    }
-                    break;
-
-                    case 1:
-                    {
-                        dll::Object aStar = dll::Factory(type_mid_star, (float)(RandGen(0, (int)(scr_width))),
-                            (float)(RandGen((int)(sky), (int)(ground))));
-                        is_ok = true;
-
-                        if (!vStars.empty())
+                        case 1:
                         {
-                            for (int i = 0; i < vStars.size(); ++i)
+                            dll::Object aStar = dll::Factory(type_mid_star, (float)(RandGen(0,
+                                (int)(scr_width))), (float)(RandGen((int)(scr_height / 2), (int)(ground))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
                             {
-                                if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
-                                    && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                for (int i = 0; i < vStars.size(); ++i)
                                 {
-                                    is_ok = false;
-                                    break;
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
                                 }
+
+                                if (is_ok)vStars.push_back(aStar);
                             }
-
-                            if (is_ok)vStars.push_back(aStar);
+                            else vStars.push_back(aStar);
                         }
-                        else vStars.push_back(aStar);
-                    }
-                    break;
+                        break;
 
-                    case 2:
-                    {
-                        dll::Object aStar = dll::Factory(type_big_star, (float)(RandGen(0, (int)(scr_width))),
-                            (float)(RandGen((int)(sky), (int)(ground))));
-                        is_ok = true;
-
-                        if (!vStars.empty())
+                        case 2:
                         {
-                            for (int i = 0; i < vStars.size(); ++i)
-                            {
-                                if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
-                                    && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
-                                {
-                                    is_ok = false;
-                                    break;
-                                }
-                            }
+                            dll::Object aStar = dll::Factory(type_big_star, (float)(RandGen(0,
+                                (int)(scr_width))), (float)(RandGen((int)(scr_height / 2), (int)(ground))));
+                            is_ok = true;
 
-                            if (is_ok)vStars.push_back(aStar);
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
                         }
-                        else vStars.push_back(aStar);
+                        break;
+                        }    
+                        break;
+
+                    case dirs::up_right:
+                        switch (RandGen(0, 2))
+                        {
+                        case 0:
+                        {
+                            dll::Object aStar = dll::Factory(type_small_star, (float)(RandGen(0, (int)(scr_width))),
+                                (float)(RandGen((int)(scr_height / 2), (int)(ground))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+
+                        case 1:
+                        {
+                            dll::Object aStar = dll::Factory(type_mid_star, (float)(RandGen(0, (int)(scr_width))),
+                                (float)(RandGen((int)(scr_height / 2), (int)(ground))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+
+                        case 2:
+                        {
+                            dll::Object aStar = dll::Factory(type_big_star, (float)(RandGen(0, (int)(scr_width))),
+                                (float)(RandGen((int)(scr_height / 2), (int)(ground))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+                        }
+                        break;
+
+                    case dirs::down_left:
+                        switch (RandGen(0, 2))
+                        {
+                        case 0:
+                        {
+                            dll::Object aStar = dll::Factory(type_small_star, (float)(RandGen(0,
+                                (int)(scr_width))), (float)(RandGen(0, (int)(scr_height / 2))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+
+                        case 1:
+                        {
+                            dll::Object aStar = dll::Factory(type_mid_star, (float)(RandGen(0,
+                                (int)(scr_width))), (float)(RandGen(0, (int)(scr_height / 2))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+
+                        case 2:
+                        {
+                            dll::Object aStar = dll::Factory(type_big_star, (float)(RandGen(0,
+                                (int)(scr_width))), (float)(RandGen(0, (int)(scr_height / 2))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+                        }
+                        break;
+
+                    case dirs::down_right:
+                        switch (RandGen(0, 2))
+                        {
+                        case 0:
+                        {
+                            dll::Object aStar = dll::Factory(type_small_star, (float)(RandGen(0, (int)(scr_width))),
+                                (float)(RandGen((int)(sky), (int)(scr_width / 2))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+
+                        case 1:
+                        {
+                            dll::Object aStar = dll::Factory(type_mid_star, (float)(RandGen(0, (int)(scr_width))),
+                                (float)(RandGen((int)(sky), (int)(scr_width / 2))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+
+                        case 2:
+                        {
+                            dll::Object aStar = dll::Factory(type_big_star, (float)(RandGen(0, (int)(scr_width))),
+                                (float)(RandGen((int)(sky), (int)(scr_width / 2))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+                        }
+                        break;
+
+                    case dirs::up:
+                        switch (RandGen(0, 2))
+                        {
+                        case 0:
+                        {
+                            dll::Object aStar = dll::Factory(type_small_star, (float)(RandGen(0, (int)(scr_width))),
+                                (float)(RandGen((int)(scr_height / 2), (int)(ground))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+
+                        case 1:
+                        {
+                            dll::Object aStar = dll::Factory(type_mid_star, (float)(RandGen(0, (int)(scr_width))),
+                                (float)(RandGen((int)(scr_height / 2), (int)(ground))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+
+                        case 2:
+                        {
+                            dll::Object aStar = dll::Factory(type_big_star, (float)(RandGen(0, (int)(scr_width))),
+                                (float)(RandGen((int)(scr_height / 2), (int)(ground))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+                        }
+                        break;
+
+                    case dirs::down:
+                        switch (RandGen(0, 2))
+                        {
+                        case 0:
+                        {
+                            dll::Object aStar = dll::Factory(type_small_star, (float)(RandGen(0, (int)(scr_width))),
+                                (float)(RandGen((int)(sky), (int)(scr_height / 2))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+
+                        case 1:
+                        {
+                            dll::Object aStar = dll::Factory(type_mid_star, (float)(RandGen(0, (int)(scr_width))), 
+                                (float)(RandGen((int)(sky), (int)(scr_height / 2))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+
+                        case 2:
+                        {
+                            dll::Object aStar = dll::Factory(type_big_star, (float)(RandGen(0, (int)(scr_width))),
+                                (float)(RandGen((int)(sky), (int)(scr_height / 2))));
+                            is_ok = true;
+
+                            if (!vStars.empty())
+                            {
+                                for (int i = 0; i < vStars.size(); ++i)
+                                {
+                                    if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                                        && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)
+                                    {
+                                        is_ok = false;
+                                        break;
+                                    }
+                                }
+
+                                if (is_ok)vStars.push_back(aStar);
+                            }
+                            else vStars.push_back(aStar);
+                        }
+                        break;
+                        }
+                        break;
+
+
                     }
-                    break;
-                    }
-                   
                 }
             }
         }
