@@ -126,7 +126,7 @@ std::vector<dll::Object> vStars;
 dll::PROTON* left_laser{ nullptr };
 dll::PROTON* right_laser{ nullptr };
 
-
+std::vector<dll::Object>vMeteors;
 
 
 
@@ -299,6 +299,9 @@ void InitGame()
             
         }
     }
+
+    if (!vMeteors.empty())for (int i = 0; i < vMeteors.size(); ++i)ClearMem(&vMeteors[i]);
+    vMeteors.clear();
 
     left_laser = new dll::PROTON(150.0f, ground - 183.0f, 250.0f, 183.0f);
     right_laser = new dll::PROTON(scr_width - 400.0f, ground - 183.0f, 250.0f, 183.0f);
@@ -977,8 +980,109 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             }
         }
 
+        // METEORS ******************************************
 
+        if (vMeteors.size() < level + 3 && RandGen(0, 100) == 6)
+        {
+            int type = RandGen(0, 2);
 
+            bool is_ok = false;
+            
+            while (!is_ok)
+            {
+                if (type == 0)
+                {
+                    dll::Object meteor = dll::Factory(type_meteor1, (float)(RandGen(0, (int)(scr_width))), sky,
+                        (float)(RandGen(0, (int)(scr_width))), ground);
+                    
+                    is_ok = true;
+                    
+                    if (!vMeteors.empty())
+                    {
+                        for (int i = 0; i < vMeteors.size(); ++i)
+                        {
+                            if (abs(meteor->center.x - vMeteors[i]->center.x) <= meteor->x_radius + vMeteors[i]->x_radius &&
+                                abs(meteor->center.y - vMeteors[i]->center.y) <= meteor->y_radius + vMeteors[i]->y_radius)
+                            {
+                                is_ok = false;
+                                break;
+                            }
+                        }
+                        vMeteors.push_back(meteor);
+                    }
+                    else vMeteors.push_back(meteor);
+                }
+                else if (type == 1)
+                {
+                    dll::Object meteor = dll::Factory(type_meteor2, (float)(RandGen(0, (int)(scr_width))), sky,
+                        (float)(RandGen(0, (int)(scr_width))), ground);
+
+                    is_ok = true;
+
+                    if (!vMeteors.empty())
+                    {
+                        for (int i = 0; i < vMeteors.size(); ++i)
+                        {
+                            if (abs(meteor->center.x - vMeteors[i]->center.x) <= meteor->x_radius + vMeteors[i]->x_radius &&
+                                abs(meteor->center.y - vMeteors[i]->center.y) <= meteor->y_radius + vMeteors[i]->y_radius)
+                            {
+                                is_ok = false;
+                                break;
+                            }
+                        }
+                        vMeteors.push_back(meteor);
+                    }
+                    else vMeteors.push_back(meteor);
+                }
+                else if (type == 2)
+                {
+                    dll::Object meteor = dll::Factory(type_meteor3, (float)(RandGen(0, (int)(scr_width))), sky,
+                        (float)(RandGen(0, (int)(scr_width))), ground);
+
+                    is_ok = true;
+
+                    if (!vMeteors.empty())
+                    {
+                        for (int i = 0; i < vMeteors.size(); ++i)
+                        {
+                            if (abs(meteor->center.x - vMeteors[i]->center.x) <= meteor->x_radius + vMeteors[i]->x_radius &&
+                                abs(meteor->center.y - vMeteors[i]->center.y) <= meteor->y_radius + vMeteors[i]->y_radius)
+                            {
+                                is_ok = false;
+                                break;
+                            }
+                        }
+                        vMeteors.push_back(meteor);
+                    }
+                    else vMeteors.push_back(meteor);
+                }
+            }
+        }
+        if (!vMeteors.empty())
+        {
+            for (std::vector<dll::Object>::iterator met = vMeteors.begin(); met < vMeteors.end(); ++met)
+            {
+                if (field_dir == dirs::stop)
+                {
+                    if (!(*met)->Move((float)level))
+                    {
+                        (*met)->Release();
+                        vMeteors.erase(met);
+                        break;
+                    }
+                }
+                else
+                {
+                    if (!(*met)->Move((float)level, true, field_dir))
+                    {
+                        (*met)->Release();
+                        vMeteors.erase(met);
+                        break;
+                    }
+                }
+            }
+        }
+        //////////////////////////////////////////////////////
 
 
 
@@ -1037,6 +1141,30 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             left_laser->end.x, left_laser->end.y));
         if (right_laser)Draw->DrawBitmap(bmpCannonR, D2D1::RectF(right_laser->start.x, right_laser->start.y,
             right_laser->end.x, right_laser->end.y));
+        if (!vMeteors.empty())
+        {
+            for (std::vector<dll::Object>::iterator met = vMeteors.begin(); met < vMeteors.end(); ++met)
+            {
+                int aframe = (*met)->GetFrame();
+
+                switch ((*met)->type)
+                {
+                case type_meteor1:
+                    Draw->DrawBitmap(bmpAsteroid1[aframe], (*met)->Rect);
+                    break;
+
+                case type_meteor2:
+                    Draw->DrawBitmap(bmpAsteroid2[aframe], (*met)->Rect);
+                    break;
+
+                case type_meteor3:
+                    Draw->DrawBitmap(bmpAsteroid3[aframe], (*met)->Rect);
+                    break;
+                }
+            }
+        }
+
+
 
         /////////////////////////////////////////////////////
         Draw->EndDraw();
