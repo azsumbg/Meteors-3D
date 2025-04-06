@@ -123,6 +123,8 @@ ID2D1Bitmap* bmpAsteroid3[20]{ nullptr };
 /////////////////////////////////////////////////////////////////
 
 std::vector<dll::Object> vStars;
+dll::PROTON* left_laser{ nullptr };
+dll::PROTON* right_laser{ nullptr };
 
 
 
@@ -298,11 +300,8 @@ void InitGame()
         }
     }
 
-
-
-
-
-
+    left_laser = new dll::PROTON(150.0f, ground - 183.0f, 250.0f, 183.0f);
+    right_laser = new dll::PROTON(scr_width - 400.0f, ground - 183.0f, 250.0f, 183.0f);
 
 
 }
@@ -515,20 +514,20 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPar
     case WM_RBUTTONDOWN:
         if (HIWORD(lParam) <= scr_height / 2 - 100.0f)
         {
-            if (LOWORD(lParam) <= scr_width / 2 - 150.0f)field_dir = dirs::down_left;
-            else if (LOWORD(lParam) >= scr_width / 2 + 150.0f)field_dir = dirs::down_right;
+            if (LOWORD(lParam) <= scr_width / 2 - 150.0f)field_dir = dirs::down_right;
+            else if (LOWORD(lParam) >= scr_width / 2 + 150.0f)field_dir = dirs::down_left;
             else field_dir = dirs::down;
         }
         else if (HIWORD(lParam) >= scr_height / 2 + 100.0f)
         {
-            if (LOWORD(lParam) <= scr_width / 2 - 150.0f)field_dir = dirs::up_left;
-            else if (LOWORD(lParam) >= scr_width / 2 + 150.0f)field_dir = dirs::up_right;
+            if (LOWORD(lParam) <= scr_width / 2 - 150.0f)field_dir = dirs::up_right;
+            else if (LOWORD(lParam) >= scr_width / 2 + 150.0f)field_dir = dirs::up_left;
             else field_dir = dirs::up;
         }
         else
         {
-            if (LOWORD(lParam) <= scr_width / 2)field_dir = dirs::left;
-            else field_dir = dirs::right;
+            if (LOWORD(lParam) <= scr_width / 2)field_dir = dirs::right;
+            else field_dir = dirs::left;
         }
         break;
 
@@ -816,8 +815,8 @@ void CreateResources()
 
     if (Draw && TxtBrush && bigFormat)
     {
-        wchar_t start_txt[38]{ L"МЕТЕОРИТНА АТАКА !    \n\ndev. Daniel !" };
-        wchar_t show_txt[38]{ L"" };
+        wchar_t start_txt[46]{ L"МЕТЕОРИТНА АТАКА !    \n\n        dev. Daniel !" };
+        wchar_t show_txt[46]{ L"" };
         int intro_frame = 0;
         int txt_pos = 0;
 
@@ -832,8 +831,8 @@ void CreateResources()
             show_txt[txt_pos] = start_txt[txt_pos];
             intro_frame++;
             if (intro_frame > 46)start_ready = true;
-            Draw->DrawTextW(show_txt, txt_pos, bigFormat, D2D1::RectF(100.0f, 100.0f, scr_width, scr_height), TxtBrush);
-            if (txt_pos < 38)++txt_pos;
+            Draw->DrawTextW(show_txt, txt_pos, bigFormat, D2D1::RectF(100.0f, 300.0f, scr_width, scr_height), TxtBrush);
+            if (txt_pos < 46)++txt_pos;
             Draw->EndDraw();
             Sleep(80);
         }
@@ -1034,8 +1033,12 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                 }
             }
         }
+        if (left_laser)Draw->DrawBitmap(bmpCannonL, D2D1::RectF(left_laser->start.x, left_laser->start.y,
+            left_laser->end.x, left_laser->end.y));
+        if (right_laser)Draw->DrawBitmap(bmpCannonR, D2D1::RectF(right_laser->start.x, right_laser->start.y,
+            right_laser->end.x, right_laser->end.y));
 
-
+        /////////////////////////////////////////////////////
         Draw->EndDraw();
     }
 
