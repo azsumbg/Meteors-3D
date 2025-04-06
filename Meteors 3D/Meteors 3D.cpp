@@ -127,8 +127,7 @@ dll::PROTON* left_laser{ nullptr };
 dll::PROTON* right_laser{ nullptr };
 
 std::vector<dll::Object>vMeteors;
-
-
+std::vector<dll::Object>vLasers;
 
 ////////////////////////////////////////////////////////////////
 
@@ -302,6 +301,9 @@ void InitGame()
 
     if (!vMeteors.empty())for (int i = 0; i < vMeteors.size(); ++i)ClearMem(&vMeteors[i]);
     vMeteors.clear();
+
+    if (!vLasers.empty())for (int i = 0; i < vLasers.size(); ++i)ClearMem(&vLasers[i]);
+    vLasers.clear();
 
     left_laser = new dll::PROTON(150.0f, ground - 183.0f, 250.0f, 183.0f);
     right_laser = new dll::PROTON(scr_width - 400.0f, ground - 183.0f, 250.0f, 183.0f);
@@ -511,6 +513,44 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPar
 
 
 
+        }
+        break;
+
+    case WM_LBUTTONDOWN:
+        if (HIWORD(lParam) <= 50)
+        {
+            if (LOWORD(lParam) >= b1TxtRect.left && LOWORD(lParam) <= b1TxtRect.right)
+            {
+                if (name_set)
+                {
+                    if (sound)mciSendString(L"play .\\res\\snd\\negative.wav", NULL, NULL, NULL);
+                    break;
+                }
+                if (sound)mciSendString(L"play .\\res\\snd\\select.wav", NULL, NULL, NULL);
+                if (DialogBox(bIns, MAKEINTRESOURCE(IDD_PLAYER), hwnd, &DlgProc) == IDOK)name_set = true;
+                break;
+            }
+            if (LOWORD(lParam) >= b2TxtRect.left && LOWORD(lParam) <= b2TxtRect.right)
+            {
+                mciSendString(L"play .\\res\\snd\\select.wav", NULL, NULL, NULL);
+                if (sound)
+                {
+                    PlaySound(NULL, NULL, NULL);
+                    sound = false;
+                    break;
+                }
+                else
+                {
+                    PlaySound(sound_file, NULL, SND_ASYNC | SND_LOOP);
+                    sound = true;
+                    break;
+                }
+            }
+        }
+        else
+        {
+            vLasers.push_back(dll::Factory(type_left_laser, left_laser->end.x, left_laser->start.y, LOWORD(lParam), HIWORD(lParam)));
+            vLasers.push_back(dll::Factory(type_right_laser, right_laser->start.x, right_laser->start.y, LOWORD(lParam), HIWORD(lParam)));
         }
         break;
 
@@ -1082,10 +1122,26 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                 }
             }
         }
+
         //////////////////////////////////////////////////////
 
+        // LASERS *******************************************
+
+        if (!vLasers.empty())
+        {
+            for (std::vector<dll::Object>::iterator laser = vLasers.begin(); laser < vLasers.end(); ++laser)
+            {
+                if (!(*laser)->Move((float)(level)))
+                {
+                    (*laser)->Release();
+                    vLasers.erase(laser);
+                    break;
+                }
+            }
+        }
 
 
+        ////////////////////////////////////////////////////
 
         // DRAW THINGS ***************************************
 
@@ -1163,7 +1219,22 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                 }
             }
         }
+        if (!vLasers.empty())
+        {
+            for (std::vector<dll::Object>::iterator laser = vLasers.begin(); laser < vLasers.end(); ++laser)
+            {
+                switch ((*laser)->type)
+                {
+                case type_left_laser:
+                    Draw->DrawBitmap(bmpLaserL, (*laser)->Rect);
+                    break;
 
+                case type_right_laser:
+                    Draw->DrawBitmap(bmpLaserR, (*laser)->Rect);
+                    break;
+                }
+            }
+        }
 
 
         /////////////////////////////////////////////////////
