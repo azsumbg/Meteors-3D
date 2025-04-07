@@ -318,6 +318,160 @@ void InitGame()
 
     vExplosions.clear();
 }
+void LevelUp()
+{
+    if (secs <= 0)
+    {
+        score += level * 20;
+        int bonus = 0;
+
+        if (bigFormat && TxtBrush)
+        {
+            while (bonus < score)
+            {
+                wchar_t txt[100] = L"БОНУС: ";
+                wchar_t add[5] = L"\0";
+                int txt_size = 0;
+
+                wsprintf(add, L"%d", bonus);
+                wcscat_s(txt, add);
+
+                for (int i = 0; i < 100; ++i)
+                {
+                    if (txt[i] != '\0')txt_size++;
+                    else break;
+                }
+
+                Draw->BeginDraw();
+                Draw->DrawBitmap(bmpIntro[0], D2D1::RectF(0, 0, scr_width, scr_height));
+                Draw->DrawTextW(txt, txt_size, bigFormat, D2D1::RectF(200.0f, scr_height / 2 - 100.0f, scr_width, scr_height), TxtBrush);
+                Draw->EndDraw();
+                bonus += 10;       
+                Sleep(80);
+                if (sound)mciSendString(L"play .\\res\\snd\\click.wav", NULL, NULL, NULL);
+            }
+        }
+        Sleep(2000);
+    }
+
+    if (bigFormat && TxtBrush)
+    {
+        Draw->BeginDraw();
+        Draw->DrawBitmap(bmpIntro[0], D2D1::RectF(0, 0, scr_width, scr_height));
+        Draw->DrawTextW(L"НИВОТО ПРЕМИНАТО !", 19, bigFormat, D2D1::RectF(200.0f, scr_width / 2 - 150.0f, scr_width, scr_height), 
+            TxtBrush);
+        Draw->EndDraw();
+    }
+
+    if (sound)
+    {
+        PlaySound(NULL, NULL, NULL);
+        PlaySound(L".\\res\\snd\\levelup.wav", NULL, SND_SYNC);
+        PlaySound(sound_file, NULL, SND_ASYNC | SND_LOOP);
+    }
+    else Sleep(3500);
+
+    ++level;
+    secs = 180 + level * 10;
+    field_dir = dirs::stop;
+
+    if (!vStars.empty())for (int i = 0; i < vStars.size(); ++i)ClearMem(&vStars[i]);
+    vStars.clear();
+    for (int i = 0; i < 150; ++i)
+    {
+        bool ok = false;
+        while (!ok)
+        {
+            switch (RandGen(0, 2))
+            {
+            case 0:
+            {
+                dll::Object aStar = dll::Factory(type_small_star, (float)(RandGen(20, (int)(scr_width))),
+                    (float)(RandGen((int)(sky), (int)(ground))));
+                if (vStars.empty())
+                {
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+                else
+                {
+                    for (int i = 0; i < vStars.size(); ++i)
+                    {
+                        if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                            && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)break;
+                    }
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+            }
+            break;
+
+            case 1:
+            {
+                dll::Object aStar = dll::Factory(type_mid_star, (float)(RandGen(20, (int)(scr_width))),
+                    (float)(RandGen((int)(sky), (int)(ground))));
+                if (vStars.empty())
+                {
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+                else
+                {
+                    for (int i = 0; i < vStars.size(); ++i)
+                    {
+                        if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                            && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)break;
+                    }
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+            }
+            break;
+
+            case 2:
+            {
+                dll::Object aStar = dll::Factory(type_big_star, (float)(RandGen(20, (int)(scr_width))),
+                    (float)(RandGen((int)(sky), (int)(ground))));
+                if (vStars.empty())
+                {
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+                else
+                {
+                    for (int i = 0; i < vStars.size(); ++i)
+                    {
+                        if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                            && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)break;
+                    }
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+            }
+            break;
+
+            }
+
+        }
+    }
+
+    if (!vMeteors.empty())for (int i = 0; i < vMeteors.size(); ++i)ClearMem(&vMeteors[i]);
+    vMeteors.clear();
+
+    if (!vLasers.empty())for (int i = 0; i < vLasers.size(); ++i)ClearMem(&vLasers[i]);
+    vLasers.clear();
+
+    left_laser = new dll::PROTON(150.0f, ground - 183.0f, 250.0f, 183.0f);
+    right_laser = new dll::PROTON(scr_width - 400.0f, ground - 183.0f, 250.0f, 183.0f);
+
+    vExplosions.clear();
+}
 
 INT_PTR CALLBACK DlgProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -408,6 +562,7 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPar
         if (pause)break;
         secs--;
         mins = secs / 60;
+        if (secs <= 0)LevelUp();
         break;
 
     case WM_SETCURSOR:
@@ -512,7 +667,7 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPar
                 pause = false;
                 break;
             }
-            //LevelUp();
+            LevelUp();
             break;
 
         case mExit:
