@@ -122,12 +122,20 @@ ID2D1Bitmap* bmpAsteroid3[20]{ nullptr };
 
 /////////////////////////////////////////////////////////////////
 
+struct EXPLOSION
+{
+    dll::PROTON Dims;
+    int frame = 0;
+};
+
 std::vector<dll::Object> vStars;
 dll::PROTON* left_laser{ nullptr };
 dll::PROTON* right_laser{ nullptr };
 
 std::vector<dll::Object>vMeteors;
 std::vector<dll::Object>vLasers;
+
+std::vector<EXPLOSION>vExplosions;
 
 ////////////////////////////////////////////////////////////////
 
@@ -308,7 +316,7 @@ void InitGame()
     left_laser = new dll::PROTON(150.0f, ground - 183.0f, 250.0f, 183.0f);
     right_laser = new dll::PROTON(scr_width - 400.0f, ground - 183.0f, 250.0f, 183.0f);
 
-
+    vExplosions.clear();
 }
 
 INT_PTR CALLBACK DlgProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lParam)
@@ -549,8 +557,23 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPar
         }
         else
         {
-            vLasers.push_back(dll::Factory(type_left_laser, left_laser->end.x, left_laser->start.y, LOWORD(lParam), HIWORD(lParam)));
-            vLasers.push_back(dll::Factory(type_right_laser, right_laser->start.x, right_laser->start.y, LOWORD(lParam), HIWORD(lParam)));
+            if (sound)mciSendString(L"play .\\res\\snd\\laser.wav", NULL, NULL, NULL);
+
+            if (LOWORD(lParam) <= left_laser->end.x)
+            {
+                vLasers.push_back(dll::Factory(type_right_laser, left_laser->end.x, left_laser->start.y, LOWORD(lParam), HIWORD(lParam)));
+                vLasers.push_back(dll::Factory(type_right_laser, right_laser->start.x, right_laser->start.y, LOWORD(lParam), HIWORD(lParam)));
+            }
+            else if (LOWORD(lParam) >= right_laser->start.x)
+            {
+                vLasers.push_back(dll::Factory(type_left_laser, left_laser->end.x, left_laser->start.y, LOWORD(lParam), HIWORD(lParam)));
+                vLasers.push_back(dll::Factory(type_left_laser, right_laser->start.x, right_laser->start.y, LOWORD(lParam), HIWORD(lParam)));
+            }
+            else
+            {
+                vLasers.push_back(dll::Factory(type_left_laser, left_laser->end.x, left_laser->start.y, LOWORD(lParam), HIWORD(lParam)));
+                vLasers.push_back(dll::Factory(type_right_laser, right_laser->start.x, right_laser->start.y, LOWORD(lParam), HIWORD(lParam)));
+            }
         }
         break;
 
@@ -1024,18 +1047,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
 
         if (vMeteors.size() < level + 3 && RandGen(0, 100) == 6)
         {
-            int type = RandGen(0, 2);
-
             bool is_ok = false;
             
             while (!is_ok)
             {
+                int type = RandGen(0, 2);
+
+                is_ok = true;
+
                 if (type == 0)
                 {
                     dll::Object meteor = dll::Factory(type_meteor1, (float)(RandGen(0, (int)(scr_width))), sky,
                         (float)(RandGen(0, (int)(scr_width))), ground);
-                    
-                    is_ok = true;
                     
                     if (!vMeteors.empty())
                     {
@@ -1048,7 +1071,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                                 break;
                             }
                         }
-                        vMeteors.push_back(meteor);
+                        if (is_ok)vMeteors.push_back(meteor);
                     }
                     else vMeteors.push_back(meteor);
                 }
@@ -1057,8 +1080,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                     dll::Object meteor = dll::Factory(type_meteor2, (float)(RandGen(0, (int)(scr_width))), sky,
                         (float)(RandGen(0, (int)(scr_width))), ground);
 
-                    is_ok = true;
-
                     if (!vMeteors.empty())
                     {
                         for (int i = 0; i < vMeteors.size(); ++i)
@@ -1070,7 +1091,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                                 break;
                             }
                         }
-                        vMeteors.push_back(meteor);
+                        if (is_ok)vMeteors.push_back(meteor);
                     }
                     else vMeteors.push_back(meteor);
                 }
@@ -1079,8 +1100,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                     dll::Object meteor = dll::Factory(type_meteor3, (float)(RandGen(0, (int)(scr_width))), sky,
                         (float)(RandGen(0, (int)(scr_width))), ground);
 
-                    is_ok = true;
-
                     if (!vMeteors.empty())
                     {
                         for (int i = 0; i < vMeteors.size(); ++i)
@@ -1092,7 +1111,7 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                                 break;
                             }
                         }
-                        vMeteors.push_back(meteor);
+                        if (is_ok)vMeteors.push_back(meteor);
                     }
                     else vMeteors.push_back(meteor);
                 }
@@ -1140,6 +1159,62 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             }
         }
 
+        if (!vLasers.empty() && !vMeteors.empty())
+        {
+            for (std::vector<dll::Object>::iterator meteor = vMeteors.begin(); meteor < vMeteors.end(); meteor++)
+            {
+                bool killed = false;
+
+                for (std::vector<dll::Object>::iterator shot = vLasers.begin(); shot < vLasers.end(); shot++)
+                {
+                    if (abs((*shot)->center.x - (*meteor)->center.x) <= (*shot)->x_radius + (*meteor)->x_radius
+                        && abs((*shot)->center.y - (*meteor)->center.y) <= (*shot)->y_radius + (*meteor)->y_radius)
+                    {
+                        (*shot)->Release();
+                        vLasers.erase(shot);
+
+                        (*meteor)->lifes -= 20 * level;
+                        if ((*meteor)->lifes <= 0)
+                        {
+                            if (sound)mciSendString(L"play .\\res\\snd\\explosion.wav", NULL, NULL, NULL);
+                            vExplosions.push_back(EXPLOSION{ dll::PROTON((*meteor)->start.x, (*meteor)->start.y, 100.0f, 114.0f) });
+                            (*meteor)->Release();
+                            vMeteors.erase(meteor);
+                            killed = true;
+                            score += 9 + level;
+                            break;
+                        }
+                        break;
+                    }
+                }
+
+                if (killed)break;
+            }
+        }
+
+        if (!vMeteors.empty() && left_laser && right_laser)
+        {
+            for (std::vector<dll::Object>::iterator met = vMeteors.begin(); met < vMeteors.end(); ++met)
+            {
+                if ((abs(left_laser->center.x -(*met)->center.x)<=left_laser->x_radius + (*met)->x_radius 
+                    && abs(left_laser->center.y - (*met)->center.y) <= left_laser->y_radius + (*met)->y_radius)
+                    || (abs(right_laser->center.x - (*met)->center.x) <= right_laser->x_radius + (*met)->x_radius
+                        && abs(right_laser->center.y - (*met)->center.y) <= right_laser->y_radius + (*met)->y_radius))
+                {
+                    if (sound)mciSendString(L"play .\\res\\snd\\explosion.wav", NULL, NULL, NULL);
+                    hero_alive = false;
+                    vExplosions.push_back(EXPLOSION(dll::PROTON{ left_laser->start.x,left_laser->start.y,left_laser->GetWidth(),
+                       left_laser->GetHeight() }));
+                    vExplosions.push_back(EXPLOSION(dll::PROTON{ right_laser->start.x,right_laser->start.y,right_laser->GetWidth(),
+                       right_laser->GetHeight() }));
+                    delete(left_laser);
+                    delete(right_laser);
+                    (*met)->Release();
+                    vMeteors.erase(met);
+                    break;
+                }
+            }
+        }
 
         ////////////////////////////////////////////////////
 
@@ -1235,7 +1310,18 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
                 }
             }
         }
-
+        if (!vExplosions.empty())
+            for (int i = 0; i < vExplosions.size(); ++i)
+        {
+            Draw->DrawBitmap(bmpExplosion[vExplosions[i].frame], vExplosions[i].Dims.Rect);
+            ++vExplosions[i].frame;
+            if (vExplosions[i].frame > 23)
+            {
+                vExplosions.erase(vExplosions.begin() + i);
+                if (!hero_alive)GameOver();
+                break;
+            }
+        }
 
         /////////////////////////////////////////////////////
         Draw->EndDraw();
