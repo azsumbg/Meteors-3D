@@ -1323,6 +1323,52 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
             }
         }
 
+        if (nrmFormat && TxtBrush && midFormat)
+        {
+            wchar_t status_txt[200] = L"капитан: ";
+            wchar_t add[5] = L"\0";
+            int stat_size = 0;
+
+            wcscat_s(status_txt, current_player);
+
+            wcscat_s(status_txt, L", ниво: ");
+            wsprintf(add, L"%d", level);
+            wcscat_s(status_txt, add);
+
+            wcscat_s(status_txt, L", резултат: ");
+            wsprintf(add, L"%d", score);
+            wcscat_s(status_txt, add);
+
+            for (int i = 0; i < 200; ++i)
+            {
+                if (status_txt[i] != '\0')stat_size++;
+                else break;
+            }
+            Draw->DrawTextW(status_txt, stat_size, midFormat, D2D1::RectF(20.0f, ground + 5.0f, scr_width, scr_height), TxtBrush);
+
+            stat_size = 0;
+            if (mins < 10)
+            {
+                wcscpy_s(status_txt, L"0");
+                wsprintf(add, L"%d", mins);
+                wcscat_s(status_txt, add);
+            }
+            else wsprintf(status_txt, L"%d", mins);
+
+            wcscat_s(status_txt, L" : ");
+            if (secs - mins * 60 < 10)wcscat_s(status_txt, L"0");
+            wsprintf(add, L"%d", secs - mins * 60);
+            wcscat_s(status_txt, add);
+            for (int i = 0; i < 200; ++i)
+            {
+                if (status_txt[i] != '\0')stat_size++;
+                else break;
+            }
+            Draw->DrawTextW(status_txt, stat_size, nrmFormat, D2D1::RectF(scr_width - 100.0f, sky + 5.0f,
+                scr_width, sky + 100.0f), TxtBrush);
+        }
+        
+        
         /////////////////////////////////////////////////////
         Draw->EndDraw();
     }
