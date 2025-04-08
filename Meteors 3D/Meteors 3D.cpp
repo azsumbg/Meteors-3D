@@ -230,6 +230,7 @@ BOOL CheckRecord()
 }
 void GameOver()
 {
+    Draw->EndDraw();
     PlaySound(NULL, NULL, NULL);
     KillTimer(bHwnd, bTimer);
 
@@ -386,6 +387,55 @@ void InitGame()
 
     vExplosions.clear();
 }
+void HallOfFame()
+{
+    int result{ 0 };
+    CheckFile(record_file, &result);
+    if (result == FILE_NOT_EXIST)
+    {
+        if (sound)mciSendString(L"play .\\res\\snd\\negative.wav", NULL, NULL, NULL);
+        MessageBox(bHwnd, L"Все още няма рекорд на играта !\n\nПостарай се повече !",
+            L"Липсва файл !", MB_OK | MB_APPLMODAL | MB_ICONEXCLAMATION);
+        return;
+    }
+
+    std::wifstream rec(record_file);
+    wchar_t show[100] = L"НАЙ-ДОБЪР ИГРАЧ: ";
+    wchar_t add[5] = L"\0";
+    wchar_t saved_player[16] = L"\0";
+
+    rec >> result;
+    for (int i = 0; i < 16; ++i)
+    {
+        int letter = 0;
+        rec >> letter;
+        saved_player[i] = static_cast<wchar_t>(letter);
+    }
+    rec.close();
+
+    wsprintf(add, L"%d", result);
+    wcscat_s(show, saved_player);
+    wcscat_s(show, L"\n\nСВЕТОВЕН РЕКОРД: ");
+    wcscat_s(show, add);
+
+    result = 0;
+
+    for (int i = 0; i < 100; ++i)
+    {
+        if (show[i] != '\0')++result;
+        else break;
+    }
+
+    if (TxtBrush && bigFormat)
+    {
+        Draw->BeginDraw();
+        Draw->DrawBitmap(bmpIntro[0], D2D1::RectF(0, 0, scr_width, scr_height));
+        Draw->DrawTextW(show, result, bigFormat, D2D1::RectF(20.0f, 200.0f, scr_width, scr_height), TxtBrush);
+        Draw->EndDraw();
+        if (sound)mciSendString(L"play .\\res\\snd\\showrec.wav", NULL, NULL, NULL);
+        Sleep(3000);
+    }
+}
 void LevelUp()
 {
     if (secs <= 0)
@@ -395,7 +445,7 @@ void LevelUp()
 
         if (bigFormat && TxtBrush)
         {
-            while (bonus < score)
+            while (bonus < level * 20)
             {
                 wchar_t txt[100] = L"БОНУС: ";
                 wchar_t add[5] = L"\0";
@@ -419,6 +469,7 @@ void LevelUp()
                 if (sound)mciSendString(L"play .\\res\\snd\\click.wav", NULL, NULL, NULL);
             }
         }
+        Draw->EndDraw();
         Sleep(2000);
     }
 
@@ -743,7 +794,11 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPar
             break;
 
 
-
+        case mHoF:
+            pause = true;
+            HallOfFame();
+            pause = false;
+            break;
         }
         break;
 
@@ -1140,7 +1195,6 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
         ErrExit(eClass);
     }
 
-    
     
     CreateResources();
 
