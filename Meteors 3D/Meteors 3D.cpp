@@ -591,6 +591,217 @@ void LevelUp()
 
     vExplosions.clear();
 }
+void SaveGame()
+{
+    int result{ 0 };
+    CheckFile(save_file, &result);
+    if (result == FILE_EXIST)
+    {
+        if (sound)mciSendString(L"play .\\res\\snd\\exclamation.wav", NULL, NULL, NULL);
+        if (MessageBox(bHwnd, L"Съществува предишен запис, който ще изгубиш !\n\nНаистина ли го презаписваш ?",
+            L"Презапис !", MB_YESNO | MB_APPLMODAL | MB_ICONQUESTION) == IDNO)return;
+    }
+
+    std::wofstream save(save_file);
+
+    save << score << std::endl;
+    save << level << std::endl;
+    save << mins << std::endl;
+    save << secs << std::endl;
+    for (int i = 0; i < 16; ++i)save << static_cast<int>(current_player[i]) << std::endl;
+    save << name_set << std::endl;
+    save << hero_alive << std::endl;
+    save << sound << std::endl;
+    save << static_cast<int>(field_dir) << std::endl;
+    save << vMeteors.size() << std::endl;
+    if (vMeteors.size() > 0)
+    {
+        for (int i = 0; i < vMeteors.size(); ++i)
+        {
+            save << static_cast<int>(vMeteors[i]->type) << std::endl;
+            save << vMeteors[i]->start.x << std::endl;
+            save << vMeteors[i]->start.y << std::endl;
+            save << vMeteors[i]->GetWidth() << std::endl;
+            save << vMeteors[i]->GetHeight() << std::endl;
+            save << vMeteors[i]->lifes << std::endl;
+        }
+    }
+
+    save.close();
+
+    if (sound)mciSendString(L"play .\\res\\snd\\save.wav", NULL, NULL, NULL);
+    MessageBox(bHwnd, L"Играта е запазена !", L"Запис !", MB_OK | MB_APPLMODAL | MB_ICONINFORMATION);
+}
+void LoadGame()
+{
+    int result{ 0 };
+    CheckFile(save_file, &result);
+    if (result == FILE_EXIST)
+    {
+        if (sound)mciSendString(L"play .\\res\\snd\\exclamation.wav", NULL, NULL, NULL);
+        if (MessageBox(bHwnd, L"Ако продължиш, губиш прогреса по тази игра ! !\n\nНаистина ли я презаписваш ?",
+            L"Презапис !", MB_YESNO | MB_APPLMODAL | MB_ICONQUESTION) == IDNO)return;
+    }
+    else
+    {
+        if (sound)mciSendString(L"play .\\res\\snd\\negative.wav", NULL, NULL, NULL);
+        MessageBox(bHwnd, L"Все още няма записана игра !\n\nПостарай се повече !",
+            L"Липсва файл !", MB_OK | MB_APPLMODAL | MB_ICONEXCLAMATION);
+        return;
+    }
+
+    field_dir = dirs::stop;
+
+    if (!vStars.empty())for (int i = 0; i < vStars.size(); ++i)ClearMem(&vStars[i]);
+    vStars.clear();
+    for (int i = 0; i < 150; ++i)
+    {
+        bool ok = false;
+        while (!ok)
+        {
+            switch (RandGen(0, 2))
+            {
+            case 0:
+            {
+                dll::Object aStar = dll::Factory(type_small_star, (float)(RandGen(20, (int)(scr_width))),
+                    (float)(RandGen((int)(sky), (int)(ground))));
+                if (vStars.empty())
+                {
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+                else
+                {
+                    for (int i = 0; i < vStars.size(); ++i)
+                    {
+                        if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                            && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)break;
+                    }
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+            }
+            break;
+
+            case 1:
+            {
+                dll::Object aStar = dll::Factory(type_mid_star, (float)(RandGen(20, (int)(scr_width))),
+                    (float)(RandGen((int)(sky), (int)(ground))));
+                if (vStars.empty())
+                {
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+                else
+                {
+                    for (int i = 0; i < vStars.size(); ++i)
+                    {
+                        if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                            && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)break;
+                    }
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+            }
+            break;
+
+            case 2:
+            {
+                dll::Object aStar = dll::Factory(type_big_star, (float)(RandGen(20, (int)(scr_width))),
+                    (float)(RandGen((int)(sky), (int)(ground))));
+                if (vStars.empty())
+                {
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+                else
+                {
+                    for (int i = 0; i < vStars.size(); ++i)
+                    {
+                        if (abs(aStar->center.x - vStars[i]->center.x) <= aStar->x_radius + vStars[i]->x_radius
+                            && abs(aStar->center.y - vStars[i]->center.y) <= aStar->y_radius + vStars[i]->y_radius)break;
+                    }
+                    vStars.push_back(aStar);
+                    ok = true;
+                    break;
+                }
+            }
+            break;
+
+            }
+
+        }
+    }
+
+    if (!vMeteors.empty())for (int i = 0; i < vMeteors.size(); ++i)ClearMem(&vMeteors[i]);
+    vMeteors.clear();
+
+    if (!vLasers.empty())for (int i = 0; i < vLasers.size(); ++i)ClearMem(&vLasers[i]);
+    vLasers.clear();
+
+    left_laser = new dll::PROTON(150.0f, ground - 183.0f, 250.0f, 183.0f);
+    right_laser = new dll::PROTON(scr_width - 400.0f, ground - 183.0f, 250.0f, 183.0f);
+
+    vExplosions.clear();
+    
+    /////////////////////////////////////////////////////////////////
+
+    std::wifstream save(save_file);
+
+    save >> score;
+    save >> level;
+    save >> mins;
+    save >> secs;
+    for (int i = 0; i < 16; ++i)
+    {
+        int letter = 0;
+        save >> letter;
+        current_player[i] = static_cast<wchar_t>(letter);
+    }
+    save >> name_set;
+
+    save >> hero_alive;
+    if (!hero_alive)GameOver();
+    
+    save >> sound;
+    save >> result;
+    field_dir = static_cast<dirs>(result);
+
+    save >> result;
+    if (result > 0)
+    {
+        for (int i = 0; i < result; ++i)
+        {
+            int ttype = 0;
+            float tx = 0;
+            float ty = 0;
+            float twidth = 0;
+            float theight = 0;
+            int tlifes = 0;
+
+            save >> ttype;
+            save >> tx;
+            save >> ty;
+            save >> twidth;
+            save >> theight;
+            save >> tlifes;
+
+            vMeteors.push_back(dll::Factory(static_cast<uint8_t>(ttype), tx, ty));
+            vMeteors.back()->NewDims(twidth, theight);
+            vMeteors.back()->lifes = tlifes;
+        }
+    }
+
+    save.close();
+
+    if (sound)mciSendString(L"play .\\res\\snd\\save.wav", NULL, NULL, NULL);
+    MessageBox(bHwnd, L"Играта е заредена !", L"Зареждане !", MB_OK | MB_APPLMODAL | MB_ICONINFORMATION);
+}
 
 INT_PTR CALLBACK DlgProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -793,6 +1004,17 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPar
             SendMessage(hwnd, WM_CLOSE, NULL, NULL);
             break;
 
+        case mSave:
+            pause = true;
+            SaveGame();
+            pause = false;
+            break;
+
+        case mLoad:
+            pause = true;
+            LoadGame();
+            pause = false;
+            break;
 
         case mHoF:
             pause = true;
