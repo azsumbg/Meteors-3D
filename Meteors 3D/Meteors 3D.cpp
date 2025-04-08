@@ -26,7 +26,7 @@ constexpr wchar_t Ltemp_file[](L".\\res\\data\\temp.dat");
 constexpr wchar_t help_file[](L".\\res\\data\\help.dat");
 constexpr wchar_t record_file[](L".\\res\\data\\record.dat");
 constexpr wchar_t save_file[](L".\\res\\data\\save.dat");
-constexpr wchar_t sound_file[](L".\\res\\data\\main.wav");
+constexpr wchar_t sound_file[](L".\\res\\snd\\main.wav");
 
 constexpr int mNew{ 1001 };
 constexpr int mLvl{ 1002 };
@@ -802,6 +802,57 @@ void LoadGame()
     if (sound)mciSendString(L"play .\\res\\snd\\save.wav", NULL, NULL, NULL);
     MessageBox(bHwnd, L"Играта е заредена !", L"Зареждане !", MB_OK | MB_APPLMODAL | MB_ICONINFORMATION);
 }
+void ShowHelp()
+{
+    int result = 0;
+    CheckFile(help_file, &result);
+    if (result == FILE_NOT_EXIST)
+    {
+        if (sound)mciSendString(L"play .\\res\\snd\\negative.wav", NULL, NULL, NULL);
+        MessageBox(bHwnd, L"Няма налична помощ за играта !\n\nСвържете се с разработчика !",
+            L"Липсва файл !", MB_OK | MB_APPLMODAL | MB_ICONEXCLAMATION);
+        return;
+    }
+
+    wchar_t hlp_txt[1000] = L"\0";
+    std::wifstream help(help_file);
+    help >> result;
+    for (int i = 0; i < result; i++)
+    {
+        int letter = 0;
+        help >> letter;
+        hlp_txt[i] = static_cast<wchar_t>(letter);
+    }
+    help.close();
+
+    Draw->BeginDraw();
+
+    Draw->DrawBitmap(bmpIntro[0], D2D1::RectF(0, 0, scr_width, scr_height));
+
+    if (StatusBckgBrush && b1BckgBrush && b2BckgBrush && b3BckgBrush && TxtBrush && HgltBrush && InactBrush && nrmFormat)
+    {
+        Draw->FillRectangle(D2D1::RectF(0, 0, scr_width, 50.0f), StatusBckgBrush);
+        Draw->FillRectangle(b1Rect, b1BckgBrush);
+        Draw->FillRectangle(b2Rect, b2BckgBrush);
+        Draw->FillRectangle(b3Rect, b3BckgBrush);
+
+        if (name_set)Draw->DrawTextW(L"ИМЕ НА КАПИТАН", 15, nrmFormat, b1TxtRect, InactBrush);
+        else
+        {
+            if (!b1Hglt)Draw->DrawTextW(L"ИМЕ НА КАПИТАН", 15, nrmFormat, b1TxtRect, TxtBrush);
+            else Draw->DrawTextW(L"ИМЕ НА КАПИТАН", 15, nrmFormat, b1TxtRect, HgltBrush);
+        }
+        if (!b2Hglt)Draw->DrawTextW(L"ЗВУЦИ ON / OFF", 15, nrmFormat, b2TxtRect, TxtBrush);
+        else Draw->DrawTextW(L"ЗВУЦИ ON / OFF", 15, nrmFormat, b2TxtRect, HgltBrush);
+        if (!b3Hglt)Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmFormat, b3TxtRect, TxtBrush);
+        else Draw->DrawTextW(L"ПОМОЩ ЗА ИГРАТА", 16, nrmFormat, b3TxtRect, HgltBrush);
+    }
+
+    if (TxtBrush && midFormat)Draw->DrawTextW(hlp_txt, result, midFormat, D2D1::RectF(100.0f, 80.0f, scr_width, scr_height), TxtBrush);
+
+    Draw->EndDraw();
+    if (sound)mciSendString(L"play .\\res\\snd\\help.wav", NULL, NULL, NULL);
+}
 
 INT_PTR CALLBACK DlgProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lParam)
 {
@@ -1051,6 +1102,22 @@ LRESULT CALLBACK WinProc(HWND hwnd, UINT ReceivedMsg, WPARAM wParam, LPARAM lPar
                 {
                     PlaySound(sound_file, NULL, SND_ASYNC | SND_LOOP);
                     sound = true;
+                    break;
+                }
+            }
+            if (LOWORD(lParam) >= b3TxtRect.left && LOWORD(lParam) <= b3TxtRect.right)
+            {
+                if (!show_help)
+                {
+                    show_help = true;
+                    pause = true;
+                    ShowHelp();
+                    break;
+                }
+                else
+                {
+                    show_help = false;
+                    pause = false;
                     break;
                 }
             }
@@ -1417,8 +1484,9 @@ int APIENTRY wWinMain(_In_ HINSTANCE hInstance, _In_opt_ HINSTANCE hPrevInstance
         ErrExit(eClass);
     }
 
-    
     CreateResources();
+
+    PlaySound(sound_file, NULL, SND_ASYNC | SND_LOOP);
 
     while (bMsg.message != WM_QUIT)
     {
