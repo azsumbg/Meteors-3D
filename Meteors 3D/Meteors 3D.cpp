@@ -198,14 +198,82 @@ void ErrExit(int what)
     ClearResources();
     exit(1);
 }
+BOOL CheckRecord()
+{
+    if (score < 1)return no_record;
+    int result{ 0 };
+    CheckFile(record_file, &result);
 
+    if (result == FILE_NOT_EXIST)
+    {
+        std::wofstream rec(record_file);
+        rec << score << std::endl;
+        for (int i = 0; i < 16; ++i)rec << static_cast<int>(current_player[i]) << std::endl;
+        rec.close();
+        return first_record;
+    }
+    else
+    {
+        std::wifstream check(record_file);
+        check >> result;
+        if (result < score)
+        {
+            std::wofstream rec(record_file);
+            rec << score << std::endl;
+            for (int i = 0; i < 16; ++i)rec << static_cast<int>(current_player[i]) << std::endl;
+            rec.close();
+            return record;
+        }
+    }
+
+    return no_record;
+}
 void GameOver()
 {
     PlaySound(NULL, NULL, NULL);
     KillTimer(bHwnd, bTimer);
 
+    switch (CheckRecord())
+    {
+    case no_record:
+        if (bigFormat && TxtBrush)
+        {
+            Draw->BeginDraw();
+            Draw->DrawBitmap(bmpIntro[0], D2D1::RectF(0, 0, scr_width, scr_height));
+            Draw->DrawTextW(L"ЗЕМЯТА ЗАГИНА !", 16, bigFormat, D2D1::RectF(200.0f, scr_width / 2 - 150.0f, scr_width, scr_height),
+                TxtBrush);
+            Draw->EndDraw();
+            if (sound)PlaySound(L".\\res\\snd\\loose.wav", NULL, SND_SYNC);
+            else Sleep(3000);
+        }
+        break;
 
+    case first_record:
+        if (bigFormat && TxtBrush)
+        {
+            Draw->BeginDraw();
+            Draw->DrawBitmap(bmpIntro[0], D2D1::RectF(0, 0, scr_width, scr_height));
+            Draw->DrawTextW(L"ПЪРВИ РЕКОРД НА ИГРАТА !", 25, bigFormat, D2D1::RectF(50.0f, scr_width / 2 - 150.0f, scr_width, scr_height),
+                TxtBrush);
+            Draw->EndDraw();
+            if (sound)PlaySound(L".\\res\\snd\\record.wav", NULL, SND_SYNC);
+            else Sleep(3000);
+        }
+        break;
 
+    case record:
+        if (bigFormat && TxtBrush)
+        {
+            Draw->BeginDraw();
+            Draw->DrawBitmap(bmpIntro[0], D2D1::RectF(0, 0, scr_width, scr_height));
+            Draw->DrawTextW(L"СВЕТОВЕН РЕКОРД НА ИГРАТА !", 28, bigFormat, D2D1::RectF(20.0f, scr_width / 2 - 150.0f, scr_width, scr_height),
+                TxtBrush);
+            Draw->EndDraw();
+            if (sound)PlaySound(L".\\res\\snd\\record.wav", NULL, SND_SYNC);
+            else Sleep(3000);
+        }
+        break;
+    }
 
     bMsg.message = WM_QUIT;
     bMsg.wParam = 0;
